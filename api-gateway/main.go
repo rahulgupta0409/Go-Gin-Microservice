@@ -17,7 +17,7 @@ const APIKey = "your-api-key"
 
 func main() {
 	apiGatewayURL := "http://localhost:8080"
-	microservice1URL := "http://localhost:8081"
+	microservice1URL := "http://localhost:9000"
 	microservice2URL := "http://localhost:8082"
 
 	proxy1 := createReverseProxy(microservice1URL)
