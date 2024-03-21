@@ -15,20 +15,21 @@ import (
 // APIKey - Replace this with your actual API key
 const APIKey = "your-api-key"
 
-func main() {
-	apiGatewayURL := "http://localhost:8080"
-	microservice1URL := "http://localhost:8081"
-	microservice2URL := "http://localhost:8082"
+var UserMicroservice = "http://localhost:9000"
+var ProductMicroservice = "http://localhost:8082"
 
-	proxy1 := createReverseProxy(microservice1URL)
-	proxy2 := createReverseProxy(microservice2URL)
+func main() {
+	apiGatewayURL := "http://localhost:8086"
+	proxy1 := createReverseProxy(UserMicroservice)
+	proxy2 := createReverseProxy(ProductMicroservice)
 
 	r := gin.Default()
 
 	// Add middleware to authenticate and rate limit requests
-	r.Use(authenticate())
+	//r.Use(authenticate())
 	// Add middleware to rate limit requests
 	r.Use(rateLimit())
+	r.Use(CORSMiddleware())
 
 	// *path is a wildcard parameter in Gin. It's a path parameter
 	//that matches any number of URL segments in the request path.
@@ -39,7 +40,7 @@ func main() {
 	r.Any("/microservice2/*path", proxy2)
 
 	log.Printf("API Gateway listening on %s", apiGatewayURL)
-	log.Fatal(r.Run(":8080"))
+	log.Fatal(r.Run(":8086"))
 }
 
 func createReverseProxy(targetURL string) func(*gin.Context) {
@@ -86,6 +87,21 @@ func rateLimit() gin.HandlerFunc {
 		if !limiter.Allow() {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests,
 				gin.H{"error": "Too many requests"})
+			return
+		}
+		c.Next()
+	}
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
 			return
 		}
 		c.Next()

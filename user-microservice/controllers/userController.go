@@ -88,14 +88,17 @@ func Signup() gin.HandlerFunc {
 
 		if count == 0 {
 			resultInsertationNumber, insertErr := userCollection.InsertOne(ctx, user)
+			fmt.Sprintf("result count", resultInsertationNumber)
 
 			if insertErr != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "User item was not created"})
 				return
 			}
 			defer cancel()
-			c.JSON(http.StatusOK, resultInsertationNumber)
+			c.JSON(http.StatusOK, gin.H{"user": user})
+			fmt.Sprintf("user", user)
 		}
+		c.JSON(http.StatusOK, gin.H{"token": user.Token})
 	}
 
 }
